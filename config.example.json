@@ -1,0 +1,49 @@
+{
+  "experiment": {
+    "model": "gpt-4",
+    "strategy": "symcot",
+    "temperature": 1.0,
+    "seed": 42,
+    "n_samples": 80,
+    "departments": ["development", "sales", "customer_care", "marketing"],
+    "categories": ["kpi_trend_and_performance", "customer_insights_and_impact", "process_efficiency", "forecasting_and_strategic_planning"],
+    "max_tokens": 2048,
+    "timeout_seconds": 30.0
+  },
+
+  "benchmark": {
+    "name": "BACoT (Business Analysis Corpus of Thought)",
+    "version": "1.0",
+    "description": "80 real-world business scenarios for KPI analysis",
+    "data_path": "data/bacot_dataset.json"
+  },
+
+  "metrics": {
+    "embedding_model": "all-MiniLM-L6-v2",
+    "wasserstein_pca_components": 307,
+    "cost_metric": "euclidean",
+    "factuality_model": "cross-encoder/qnli-distilroberta-base",
+    "include_reasoning_analysis": true
+  },
+
+  "output": {
+    "export_format": ["csv", "json"],
+    "export_dir": "experiments/results",
+    "include_reasoning_trees": true,
+    "include_cost_matrices": false
+  },
+
+  "logging": {
+    "level": "INFO",
+    "log_dir": "logs",
+    "rotation": "500 MB",
+    "retention": "10 days"
+  },
+
+  "api": {
+    "openai_api_key": "${OPENAI_API_KEY}",
+    "anthropic_api_key": "${ANTHROPIC_API_KEY}",
+    "request_timeout": 30,
+    "max_retries": 3
+  }
+}

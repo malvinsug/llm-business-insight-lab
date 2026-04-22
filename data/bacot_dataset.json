@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "name": "BACoT Dataset v1.0",
+    "description": "Business Analysis Corpus of Thought - 80 real-world scenarios",
+    "version": "1.0",
+    "total_scenarios": 80,
+    "departments": 4,
+    "categories_per_dept": 4,
+    "created_at": "2024-01-01T00:00:00Z"
+  },
+  "scenarios": [
+    {
+      "id": "scenario_001",
+      "department": "development",
+      "category": "kpi_trend_and_performance",
+      "difficulty": "medium",
+      "user_question": "Our development team's sprint velocity has decreased by 15% over the past three sprints. What factors could explain this trend, and what immediate actions should we take?",
+      "selected_kpis": ["sprint_velocity", "code_review_time", "bug_resolution_time", "developer_productivity_index"],
+      "data_context": {
+        "sprint_velocity_q1": 45,
+        "sprint_velocity_q2": 43,
+        "sprint_velocity_q3": 38,
+        "avg_code_review_hours": 8.5,
+        "bug_resolution_sla_met": "68%",
+        "new_team_members": 2
+      },
+      "expert_answer": "The 15% velocity decline correlates with the onboarding of two new team members and increased code review cycles (8.5 hrs avg). Root causes: (1) Knowledge transfer overhead (~10%), (2) Stricter review standards (~5%). Recommendations: Implement pair programming, create development runbooks, and establish 2-week ramp-up period. Expected recovery: 3 sprints.",
+      "keywords": ["velocity", "efficiency", "onboarding", "sprint_planning"],
+      "expected_metrics": {
+        "clarity": 0.92,
+        "relevance": 0.88,
+        "factuality": 0.95,
+        "actionability": 0.85
+      }
+    },
+    {
+      "id": "scenario_002",
+      "department": "sales",
+      "category": "customer_insights_and_impact",
+      "difficulty": "high",
+      "user_question": "Our enterprise segment shows 12% lower retention compared to mid-market. How should we prioritize retention initiatives in Q2?",
+      "selected_kpis": ["enterprise_retention_rate", "enterprise_churn_rate", "customer_lifetime_value", "net_revenue_retention"],
+      "data_context": {
+        "enterprise_retention": 0.82,
+        "midmarket_retention": 0.94,
+        "enterprise_arr": 5200000,
+        "enterprise_customers": 24,
+        "avg_support_tickets_per_customer": 3.2
+      },
+      "expert_answer": "12% gap driven by: (1) Longer implementation cycles increasing churn risk, (2) Lower engagement post-deployment (avg 3.2 support tickets). Priority initiatives for Q2: (1) Launch dedicated enterprise success program, (2) Implement quarterly business reviews, (3) Create executive dashboards. Expected impact: +4-6% retention by Q3.",
+      "keywords": ["retention", "enterprise", "customer_success", "engagement"],
+      "expected_metrics": {
+        "clarity": 0.89,
+        "relevance": 0.91,
+        "factuality": 0.87,
+        "actionability": 0.90
+      }
+    },
+    {
+      "id": "scenario_003",
+      "department": "marketing",
+      "category": "forecasting_and_strategic_planning",
+      "difficulty": "high",
+      "user_question": "Given our current CAC ($2,400), LTV ($45,000), and market expansion into APAC, what's our optimal marketing spend allocation for H2?",
+      "selected_kpis": ["customer_acquisition_cost", "lifetime_value", "ltv_cac_ratio", "market_penetration", "regional_growth_rate"],
+      "data_context": {
+        "current_cac": 2400,
+        "current_ltv": 45000,
+        "ltv_cac_ratio": 18.75,
+        "apac_market_size": 12000000000,
+        "current_apac_penetration": 0.02,
+        "h2_budget": 8000000,
+        "expected_market_growth": 0.18
+      },
+      "expert_answer": "Strong LTV:CAC ratio (18.75x) supports aggressive expansion. Recommendation: Allocate 45% to APAC market entry (high growth), 40% to core markets (mature, efficient), 15% to experimental channels. Expected outcomes: CAC stable at $2,400, 22-28% regional growth in H2, 15% incremental revenue.",
+      "keywords": ["budget_allocation", "expansion", "roi", "customer_acquisition"],
+      "expected_metrics": {
+        "clarity": 0.85,
+        "relevance": 0.94,
+        "factuality": 0.82,
+        "actionability": 0.88
+      }
+    }
+  ],
+  "disclaimer": "This is a placeholder dataset for demonstration. Replace with actual BACoT scenarios from production systems."
+}
