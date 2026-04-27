@@ -1,0 +1,15 @@
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+AZURE_DEPLOYMENT = os.getenv("AZURE_DEPLOYMENT")
+AZURE_BASE_URL = os.getenv("AZURE_BASE_URL")
+AZURE_API_VERSION = os.getenv("AZURE_API_VERSION")
+AZURE_API_KEY =   os.getenv("AZURE_API_KEY")
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+BESPOKE_API_KEY = os.getenv("BESPOKE_API_KEY")
+
+JUDGE_SYSTEM_PROMPT_FILE_DIR = os.getenv("JUDGE_SYSTEM_PROMPT_FILE_DIR")
+JUDGE_TEMPERATURE = int(os.getenv("JUDGE_TEMPERATURE"))
