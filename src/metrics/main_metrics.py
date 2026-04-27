@@ -3,6 +3,7 @@ from textstat import flesch_kincaid_grade, flesch_reading_ease
 from typing import Dict
 
 from src.nli.minicheck import NLIMiniCheckEvaluator
+from src.reasoning.evaluator import ReasoningEvaluator
 
 class MainMetrics:
     """
@@ -101,3 +102,23 @@ class MainMetrics:
         )
 
         return NLIMiniCheckEvaluator.calculate_factuality_precision(fact_check_dict=rec_check_dict, prefix="recommendations_50")
+    
+    @staticmethod
+    def evaluate_reasoning(reasoning_dict_list:list|dict) -> dict:
+        """
+        Evaluate how well the reasoning of the AI-generated business insight text based on LLM.
+
+        Args:
+            reasoning_dict_list(list|dict): It could be a list of dictionary or a dictionary.
+        Returns:
+            dict[str,float|int]: total correct reasoning, total reasoning and correct reasoning percentage
+        """
+        
+        correct_reasoning = ReasoningEvaluator.extract_reasoning_count(reasoning_dict_list)
+        total_reasoning_to_verify = ReasoningEvaluator.extract_total_reasoning_to_verify(reasoning_dict_list)
+        reasoning_percentage = correct_reasoning / total_reasoning_to_verify
+        return {
+            'correct_reasoning_count' : correct_reasoning,
+            'total_reasoning_to_verify': total_reasoning_to_verify,
+            'reasoning_percentage': reasoning_percentage
+        }

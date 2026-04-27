@@ -1,5 +1,7 @@
+import json
 import os
 import openai
+import re
 
 from src.utils.config import AZURE_DEPLOYMENT, AZURE_BASE_URL, AZURE_API_VERSION, AZURE_API_KEY, OPENAI_API_KEY, JUDGE_SYSTEM_PROMPT_FILE_DIR, JUDGE_TEMPERATURE
 
@@ -65,3 +67,65 @@ class ReasoningEvaluator:
     def evaluate_reasoning(question:str,answer:str, human_observation:str):
         user_message = ReasoningEvaluator.wrap_data_as_user_message(question,answer, human_observation)
         return ReasoningEvaluator.extract_reasoning_json_from_llm(user_message)
+    
+
+    @staticmethod
+    def extract_json_for_azure_response(reasoning_text:str) -> dict:
+        """
+        Convert the reasoning judgement from LLM into valid dictionary.
+
+        Args:
+            reasoning_text (str): judgment made by LLM in stringified JSON.
+        
+        Returns:
+            dict: a valid dictionary of reasoning judgement from LLM.
+        """
+        try:
+            # Match the JSON block enclosed in triple backticks with 'json'
+            match = re.search(r"```json\s*(.*?)\s*```", reasoning_text, re.DOTALL)
+            if match:
+                json_str = match.group(1)
+                return json.loads(json_str)
+        except Exception as e:
+            print("Error parsing JSON:", e)
+            return None
+        return None
+
+    @staticmethod
+    def extract_reasoning_count(reasoning_dict_list:list|dict) -> int:
+        """
+        Count how many valid reasoning within the AI-generated text are valid.
+
+        Args:
+            reasoning_dict_list (list|dict): It could be a list of dictionary or a dictionary containing the reasoning judgement from LLM. 
+        Returns:
+            int: total count of valid reasoning
+        """
+
+        if isinstance(reasoning_dict_list, dict):
+            reasoning_dict_list = [reasoning_dict_list]
+
+        count = 0
+        for json_dict in reasoning_dict_list:
+            try:
+                if json_dict["is_reasoning_valid"]:
+                    count += 1
+            except Exception as e:
+                raise e
+
+        return count
+
+    def extract_total_reasoning_to_verify(reasoning_dict_list:list|dict)-> int:
+        """
+        Count how many reasoning within the AI-generated text are valid.
+
+        Args:
+            reasoning_dict_list (list|dict): It could be a list of dictionary or a dictionary containing the reasoning judgement from LLM. 
+        Returns:
+            int: total count of generated reasoning
+        """
+
+        if isinstance(reasoning_dict_list, dict):
+            reasoning_dict_list = [reasoning_dict_list]
+
+        return len(reasoning_dict_list)
