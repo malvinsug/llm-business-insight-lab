@@ -24,7 +24,7 @@ share/python-wheels/
 MANIFEST
 
 # Virtual environments
-venv/
+lbil/
 env/
 ENV/
 .venv
@@ -78,3 +78,6 @@ Thumbs.db
 *_secret*
 *_key*
 .env
+
+# Additional
+ckpts/
