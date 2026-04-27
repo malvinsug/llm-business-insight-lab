@@ -83,3 +83,4 @@ Thumbs.db
 ckpts/
 ner_model/
 experiments/old
+data/old
