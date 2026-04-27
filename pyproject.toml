@@ -7,7 +7,7 @@ name = "llm-business-insight-lab"
 version = "0.1.0"
 description = "High-Reliability BI Framework: Dual-Agent Architecture for KPI-Driven Business Insights via SymCoT & NoCoT Prompting Strategies"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10,<3.11"
 license = {text = "MIT"}
 authors = [
     {name = "Research Engineer", email = "malvin@tum.de"},
@@ -74,16 +74,19 @@ asyncio_mode = "auto"
 
 [tool.black]
 line-length = 100
-target-version = ['py311']
+target-version = ['py310']
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py310"
 select = ["E", "F", "W", "I"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
 ignore_missing_imports = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
