@@ -47,7 +47,6 @@ def main():
     main_metrics_df["precision_bert"] = bert_eval_dict["bert_precision"]
     main_metrics_df["recall_bert"] = bert_eval_dict["bert_recall"]
     main_metrics_df["f1_bert"] = bert_eval_dict["bert_f1"]
-    import pdb;pdb.set_trace()
 
     logging.info("Evaluating Factuality...")
     main_metrics_df["factuality_precision_50"] = bacot_df.apply(lambda x: MainMetrics.evaluate_factuality(facts_to_check=x["fact_ai_list"], fact_reference=x["fact_human_str"]), axis=1)
