@@ -2,82 +2,72 @@
 
 **High-Reliability BI Framework for KPI-Driven Analysis via Prompting Strategy Optimization**
 
-[![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue)](https://www.python.org/)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## Overview
 
-This repository bridges **academic research** and **production-grade AI systems** by implementing a dual-agent framework for business intelligence. It extends M.Sc. thesis research from TU Munich on **Prompting Strategies for KPI Analysis**, comparing:
+This repository implements a **comprehensive evaluation framework** for analyzing AI-generated business insights. It combines multiple evaluation methodologies to assess the quality, factuality, and actionability of LLM responses against human expert benchmarks.
 
-- **SymCoT (Symbolic Chain of Thought)**: Logic-driven analysis with First-Order Logic verification for high factuality
-- **NoCoT (Direct Synthesis)**: Contrarian strategy showing superior performance for strategic C-level insights
-- **CoT (Standard Chain of Thought)**: Baseline for comparison
+The framework evaluates the **BACoT (Business Analysis Corpus of Thought)** benchmark—80 real-world business scenarios across multiple departments—using:
 
-Validated against the **BACoT (Business Analysis Corpus of Thought)** benchmark—80 real-world business scenarios across 4 departments.
+- **Readability Metrics**: Flesch-Kincaid, Flesch Reading Ease
+- **Semantic Similarity**: BERT-Score for contextual token-level matching
+- **Factuality Verification**: NLI-based (using MiniCheck-DeBERTa-v3-Large)
+- **Actionability Analysis**: Precision metrics for recommendation quality
+- **Reasoning Evaluation**: Structured reasoning chain extraction and verification
 
----
-
-## Key Innovation: The "Guidance Bias" Paradox
-
-Contrary to conventional wisdom, **complex reasoning chains can underperform** for strategic tasks:
-
-```
-NoCoT > CoT in Strategic Planning
-SymCoT > * in Factual Deep-Dives (Engineering, Root Cause Analysis)
-```
-
-This framework quantifies this tradeoff using **2-Wasserstein distance** for semantic alignment, moving beyond surface-level metrics (ROUGE, BLEU).
+Responses are evaluated against expert-provided reference answers, with results stored as structured pickle DataFrames for statistical analysis and comparison.
 
 ---
 
 ## Core Architecture
 
-### Dual-Agent System
+### Evaluation Pipeline
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                   DualAgentOrchestrator                         │
-└────┬──────────────────────────────────────────────────────────┬─┘
-     │                                                            │
-     ▼                                                            ▼
-┌──────────────────────────┐                      ┌──────────────────────────┐
-│  LogicAnalystAgent       │                      │ StrategicConsultantAgent │
-│  (SymCoT with FOL)       │                      │ (NoCoT Direct Synthesis) │
-│                          │                      │                          │
-│ • Extract facts          │                      │ • High-level synthesis   │
-│ • Formalize as predicates│                      │ • Strategic insights     │
-│ • Verify via logic       │                      │ • Forward-looking        │
-│ • High factuality        │                      │ • Better for C-suite     │
-└──────────────────────────┘                      └──────────────────────────┘
-     │                                                            │
-     └────────────┬──────────────────────────────────────────────┘
-                  │
-                  ▼
-      ┌──────────────────────────────┐
-      │  Advanced Metrics Suite       │
-      ├──────────────────────────────┤
-      │ • Wasserstein Distance       │
-      │ • Reasoning Evaluator (FOL)  │
-      │ • Factuality (NLI-based)     │
-      │ • Semantic Alignment         │
-      └──────────────────────────────┘
+Question + Reference Answer
+        ↓
+[LLM Generate Response]
+        ↓
+[Extract Text Components]
+  ├─ AITextExtractor
+  │  ├─ Observations
+  │  ├─ Hypotheses
+  │  └─ Recommendations
+  └─ HumanAnswerExtractor
+     ├─ Observations
+     ├─ Interpretations
+     └─ Recommendations
+        ↓
+[Compute Metrics via MainMetrics]
+  ├─ Readability
+  │  ├─ Flesch-Kincaid Grade
+  │  └─ Flesch Reading Ease
+  ├─ Semantic Similarity
+  │  └─ BERT-Score
+  ├─ Factuality
+  │  └─ NLIMiniCheckEvaluator (MiniCheck-DeBERTa)
+  ├─ Actionability
+  │  └─ NLI-based evaluation
+  └─ Reasoning Quality
+     └─ ReasoningEvaluator
+        ↓
+[Aggregate Results]
+  └─ Save to DataFrame (pickle format)
+        ↓
+Export → CSV/JSON for analysis
 ```
 
-### Data Flow
+### Key Components
 
-```
-User Question (KPIs, Timeframe)
-        ↓
-    [Agents]  
-        ↓
-LLM Responses (SymCoT + NoCoT)
-        ↓
-[Metrics Computation]
-        ↓
-ExperimentResult (Pydantic-validated)
-        ↓
-Export → CSV (LinkedIn-ready) / JSON (full fidelity)
-```
+| Component | Purpose | Input | Output |
+|-----------|---------|-------|--------|
+| **AITextExtractor** | Parse AI-generated content | Raw LLM response | Structured components |
+| **HumanAnswerExtractor** | Parse expert answers | Expert provided text | Sections/observations |
+| **MainMetrics** | Compute all evaluation metrics | Text pair (AI, expert) | Metric scores (dict) |
+| **NLIMiniCheckEvaluator** | Factuality checking | Claims + reference | Entailment scores (0-1) |
+| **ReasoningEvaluator** | Reasoning quality | Response + question | Reasoning count + verification |
 
 ---
 
@@ -85,7 +75,7 @@ Export → CSV (LinkedIn-ready) / JSON (full fidelity)
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.10+
 - macOS, Linux, or Windows with WSL2
 - GPU recommended for embeddings (CUDA 11.8+ or MPS for Apple Silicon)
 
@@ -97,68 +87,39 @@ git clone https://github.com/yourusername/llm-business-insight-lab.git
 cd llm-business-insight-lab
 
 # Create virtual environment
-python3.11 -m venv lbil
+python3.10 -m venv lbil
 source lbil/bin/activate  # or `lbil\Scripts\activate` on Windows
 
 # Install dependencies
 pip install -e ".[dev]"
-
-# Verify installation
-python -c "import torch; print(f'PyTorch: {torch.__version__}')"
-python -c "from src.agents import LogicAnalystAgent; print('✓ Agents imported')"
 ```
 
 ### API Keys
 
-Set environment variables for LLM providers:
-
-```bash
-export OPENAI_API_KEY="sk-..."
-export ANTHROPIC_API_KEY="sk-ant-..."
-```
+Set environment variables on `.env`.
 
 ---
 
 ## Quick Start
 
-### 1. Run a Full Experiment
+### 1. Run Metrics Evaluation
 
 ```bash
-# SymCoT (Logic-driven, high factuality)
-python runner.py --model gpt-4 --strategy symcot --n_samples 80
-
-# NoCoT (Direct synthesis, strategic)
-python runner.py --model gpt-4 --strategy nocot --n_samples 80
-
-# With custom temperature (controlled creativity)
-python runner.py --model gpt-4 --strategy nocot --temperature 1.2
+# Evaluate BACoT dataset with main metrics (Flesch-Kincaid, BERT-Score, Factuality, Actionability, Reasoning)
+python runner_main_metrics.py
 ```
 
-### 2. View Results
+### 2. Expected Dataset
 
-Results are automatically exported to `experiments/results/`:
+Results are stored as pickle files in `data/`:
 
 ```
-experiments/results/
-├── run_20250420_143022/
-│   ├── experiment_results_20250420_143022.csv  ← LinkedIn-ready metrics
-│   ├── experiment_results_20250420_143022.json ← Full fidelity data
-│   ├── experiment_summary.json                  ← Aggregated stats
-│   └── experiment_20250420.log                  ← Execution logs
-```
-
-### 3. Analyze Results
-
-```python
-import pandas as pd
-
-df = pd.read_csv("experiments/results/run_20250420_143022/experiment_results_20250420_143022.csv")
-
-print(df.groupby("prompt_strategy").agg({
-    "factuality_score": "mean",
-    "wasserstein_distance": "mean",
-    "latency_ms": "mean",
-}))
+data/
+├── bacot_complete.pkl                   ← Full dataset with all metrics
+├── bacot_main_metrics_ai.pkl             ← AI-generated metrics
+├── bacot_main_metrics_human.pkl          ← Human expert metrics
+├── bacot_metrics_normalized.pkl          ← Normalized metric scores
+└── bacot_all_metrics.pkl
 ```
 
 ---
@@ -168,240 +129,188 @@ print(df.groupby("prompt_strategy").agg({
 ```
 llm-business-insight-lab/
 ├── pyproject.toml                 # Project configuration + dependencies
+├── requirements.txt               # Pip requirements
 ├── README.md                      # This file
-├── runner.py                      # Main entry point
+├── Makefile                       # Build and utility commands
+│
+├── runner_main_metrics.py         # Main evaluation runner (Flesch, BERT, Factuality, etc.)
+├── playground.ipynb               # Interactive exploration notebook
 │
 ├── src/
 │   ├── __init__.py
-│   ├── data_models.py            # Pydantic schemas (ExperimentConfig, Result)
-│   ├── agents/
-│   │   └── __init__.py           # LogicAnalystAgent, StrategicConsultantAgent
+│   ├── extractor/
+│   │   ├── __init__.py
+│   │   ├── ai.py                 # AITextExtractor: Extract observations, hypotheses, recommendations from AI responses
+│   │   └── human.py              # HumanAnswerExtractor: Parse human expert answers
+│   │
 │   ├── metrics/
-│   │   └── __init__.py           # WassersteinAnalyzer, ReasoningEvaluator
-│   ├── evaluators/
-│   │   └── __init__.py           # BACoTBenchmark, ExperimentRunner
+│   │   ├── __init__.py
+│   │   └── main_metrics.py        # MainMetrics: Flesch-Kincaid, Flesch Reading Ease, BERT-Score, Factuality, Actionability, Reasoning
+│   │
+│   ├── nli/
+│   │   ├── __init__.py
+│   │   └── minicheck.py           # NLIMiniCheckEvaluator: NLI-based factuality checking (MiniCheck model)
+│   │
+│   ├── reasoning/
+│   │   ├── __init__.py
+│   │   └── evaluator.py           # ReasoningEvaluator: Extract and evaluate reasoning chains
+│   │
 │   └── utils/
-│       └── __init__.py           # Utility functions
+│       ├── __init__.py
+│       └── config.py              # Utility functions and configuration
 │
 ├── data/
-│   ├── bacot_dataset.json        # 80 real-world scenarios (placeholder)
-│   └── expert_answers/
+│   ├── bacot_complete.pkl         # Full BACoT dataset with all results
+│   ├── bacot_main_metrics_ai.pkl   # AI-generated response metrics
+│   ├── bacot_main_metrics_human.pkl # Human expert metrics
+│   └── bacot_all_metrics.pkl       # Comprehensive metrics suite
 │
 ├── experiments/
-│   ├── results/                  # CSV/JSON exports
-│   └── logs/                     # Execution logs
+│   └── main_experiment.ipynb      # Jupyter notebook for experiment exploration
 │
 └── tests/
-    └── test_*.py                # Unit tests
+    ├── __init__.py
+    └── test_core.py               # Unit tests
 ```
 
 ---
 
 ## Core Modules
 
-### 1. Agents (`src/agents/`)
+### 1. Extractors (`src/extractor/`)
 
-**LogicAnalystAgent** (SymCoT)
-- Extracts formal observations
-- Formalizes as First-Order Logic predicates
-- Verifies logical consistency
-- **Use for**: Engineering, RCA, Data Quality
+**AITextExtractor** (`ai.py`)
+- Extracts observations and hypotheses from AI-generated reasoning chains
+- Extracts actionable recommendations from model outputs
+- Structures unformed text into analyzable components
 
-**StrategicConsultantAgent** (NoCoT)
-- Direct strategic synthesis
-- High-level insights without intermediate steps
-- Optimal for forward-looking analysis
-- **Use for**: Marketing, Executive Briefings, Strategic Planning
+**HumanAnswerExtractor** (`human.py`)
+- Parses expert human-provided answers
+- Extracts sections: observations, interpretations, recommendations
+- Validates section structure for consistency
 
 ### 2. Metrics (`src/metrics/`)
 
-**WassersteinAnalyzer**
-- Computes 2-Wasserstein distance between LLM and expert embeddings
-- Uses Earth Mover's Distance (POT library)
-- Replaces simplistc ROUGE/BLEU with semantic alignment
+**MainMetrics** (`main_metrics.py`)
+- **Flesch-Kincaid Grade**: Measures text readability complexity
+- **Flesch Reading Ease**: General readability score (0-100)
+- **BERT-Score**: Contextual token-level semantic similarity
+- **Factuality Score**: NLI-based verification (uses MiniCheck model)
+- **Actionability Score**: Measures how actionable recommendations are
+- **Reasoning Evaluation**: Counts how many valid reasoning for each recommendations.
 
-**ReasoningEvaluator**
-- Extracts reasoning steps from SymCoT responses
-- Validates logical consistency (SymCoT-specific)
-- Counts valid reasoning chains
+### 3. NLI Evaluation (`src/nli/`)
 
-**FactualityEvaluator**
-- NLI-based verification (RoBERTa)
-- Checks if claims are supported by expert reference
-- Returns score: 0 (refuted) → 1 (entailed)
+**NLIMiniCheckEvaluator** (`minicheck.py`)
+- Wraps MiniCheck-DeBERTa-v3-Large model for Natural Language Inference
+- Scores factuality as: 0 (refuted) → 0.5 (neutral) → 1 (entailed)
+- Evaluates individual claims against reference documents
+- Calculates factuality precision and recall
 
-### 3. Evaluators (`src/evaluators/`)
+### 4. Reasoning Analysis (`src/reasoning/`)
 
-**BACoTBenchmark**
-- Loads 80 real-world business scenarios
-- Stratifies by Department × Category
-- Provides expert gold-standard answers
+**ReasoningEvaluator** (`evaluator.py`)
+- Extracts reasoning chains from LLM responses
+- Sends reasoning to evaluation LLM (Azure) for validation
+- Parses JSON-structured reasoning outputs
+- Counts total reasoning steps vs. valid verified steps
 
-**ExperimentRunner**
-- Orchestrates agent execution
-- Computes all metrics per scenario
-- Exports to CSV (LinkedIn-ready) and JSON (full fidelity)
+### 5. Utilities (`src/utils/`)
+
+**Config** (`config.py`)
+- Configuration management
+- Helper functions for data processing
 
 ---
 
 ## Methodology
 
-### Experiment Configuration
+### Data Format
+
+All data is stored in pickle format (`.pkl`) for efficient serialization:
 
 ```python
-from src.data_models import ExperimentConfig, PromptStrategy, Department
+import pickle
 
-config = ExperimentConfig(
-    model_name="gpt-4",
-    prompt_strategy=PromptStrategy.SYMCOT,
-    temperature=1.0,           # Fixed for deterministic creativity
-    seed=42,                   # Reproducibility
-    n_samples=80,              # Full BACoT dataset
-    departments=[Department.DEVELOPMENT, Department.SALES],
-    categories=[Category.KPI_TREND, Category.PROCESS_EFFICIENCY],
-    max_tokens=2048,
-)
+# Load BACoT dataset with metrics
+with open("data/bacot_complete.pkl", "rb") as f:
+    df = pickle.load(f)  # Returns pandas DataFrame
+
+# Available columns include:
+# - question, ai_answer, human_answer
+# - factuality_score, actionability_score, bert_score
+# - flesch_kincaid, flesch_reading_ease
+# - reasoning_evaluation results
 ```
 
 ### Metric Definitions
 
-| Metric | Formula | Interpretation |
-|--------|---------|-----------------|
-| **Factuality Score** | NLI(claim, expert_ref) | 0=refuted, 1=entailed |
-| **Wasserstein Distance** | W₂(LLM_embeddings, Expert_embeddings) | 0=perfect alignment, ∞=misalignment |
-| **Reasoning %** | (valid_steps / total_steps) × 100 | Quality of logical reasoning |
-| **Latency** | Wall-clock ms | Generation speed |
+| Metric | Range | Interpretation |
+|--------|-------|-----------------|
+| **Flesch-Kincaid Grade** | 0-16+ | Years of education needed; 8-9 is ideal for general audience |
+| **Flesch Reading Ease** | 0-100 | Higher = easier to read; 60-70 is considered "standard" |
+| **BERT-Score** | 0-1 | Contextual token-level semantic similarity |
+| **Factuality Score** | 0-1 | 0=refuted, 1=entailed (via NLI) |
+| **Actionability Score** | 0-1 | 0=refuted, 1=entailed (via NLI) |
+| **Reasoning ** | 0-1 | The percentage of valid reasoning based on recommendations |
 
-### Key Findings from Thesis
+### Computation Pipeline
 
-1. **"Guidance Bias" Paradox**: NoCoT outperforms CoT for strategic tasks
-2. **FOL Verification**: SymCoT highest factuality via First-Order Logic
-3. **Departmental Optimization**: Strategy choice is highly context-dependent
-4. **Wasserstein Alignment**: Strong correlation with human judgment
+```
+Input Question + Reference Answer
+        ↓
+[AI Model Generate Response]
+        ↓
+[Extract Components]
+  - Observations
+  - Recommendations
+  - Reasoning Chains
+        ↓
+[Compute Metrics]
+  - Readability (Flesch)
+  - Semantic Similarity (BERT)
+  - Factuality (NLI + MiniCheck)
+  - Actionability (NLI-based)
+  - Reasoning Quality
+        ↓
+[Save to Pickle DataFrame]
+        ↓
+Export → CSV or JSON for analysis
+```
 
 ---
 
 ## Extending the Framework
 
-### Adding a Custom Agent
-
-```python
-from src.agents import BaseAgent
-
-class CustomAgent(BaseAgent):
-    def _default_system_prompt(self) -> str:
-        return "Your custom system prompt..."
-    
-    async def generate_response(self, user_question, context, config):
-        # Your implementation
-        return AgentResponse(...)
-```
-
 ### Adding a Custom Metric
 
 ```python
-from src.metrics import BaseMetricEvaluator
+from src.metrics.main_metrics import MainMetrics
 
-class CustomMetric(BaseMetricEvaluator):
-    def evaluate(self, llm_output: str, expert_ref: str) -> float:
+class CustomMetric:
+    @staticmethod
+    def evaluate_custom_metric(text: str) -> float:
+        """
+        Implement your custom evaluation logic.
+        """
         # Your implementation
-        return score
-```
-
-### Loading Custom BACoT Dataset
-
-```python
-from src.evaluators import BACoTBenchmark
-
-benchmark = BACoTBenchmark(data_path=Path("data/my_bacot_dataset.json"))
-benchmark.load_dataset()
-```
-
----
-
-## Configuration
-
-### Environment Variables
-
-```bash
-OPENAI_API_KEY=sk-...              # OpenAI API key
-ANTHROPIC_API_KEY=sk-ant-...       # Anthropic API key
-BACOT_DATA_PATH=/path/to/bacot.json # Custom BACoT dataset
-LOG_LEVEL=INFO                     # Logging level
-```
-
-### Example YAML Config (planned feature)
-
-```yaml
-experiment:
-  model: gpt-4
-  strategy: symcot
-  temperature: 1.0
-  n_samples: 80
-
-benchmark:
-  departments: [development, sales]
-  categories: [kpi_trend, process_efficiency]
-
-metrics:
-  wasserstein_pca_components: 307
-  embedding_model: all-MiniLM-L6-v2
-  factuality_model: cross-encoder/qnli-distilroberta-base
-
-output:
-  format: [csv, json]
-  export_dir: experiments/results
-```
-
----
-
-## Output Formats
-
-### CSV Export (LinkedIn-Ready)
-
-```csv
-experiment_id,timestamp,model,prompt_strategy,department,latency_ms,factuality_score,wasserstein_distance,semantic_similarity
-550e8400-e29b-41d4-a716-446655440001,2025-04-20T14:30:22.123Z,gpt-4,symcot,development,1245.3,0.85,2.134,0.78
-```
-
-### JSON Export (Full Fidelity)
-
-```json
-{
-  "metadata": {
-    "timestamp": "2025-04-20T14:30:22.123Z",
-    "total_results": 80,
-    "model": "gpt-4"
-  },
-  "results": [
-    {
-      "experiment_id": "550e8400-e29b-41d4-a716-446655440001",
-      "config": {...},
-      "model_answer": "...",
-      "reasoning_tree": {...},
-      "metrics": {
-        "factuality_score": 0.85,
-        "wasserstein_distance": 2.134,
-        ...
-      }
-    }
-  ]
-}
+        return score_value
 ```
 
 ---
 
 ## Performance
 
-Typical performance on Apple Silicon (M1/M2):
+Typical evaluation performance on standard hardware:
 
-| Strategy | Avg Latency | Factuality | Wasserstein | Use Case |
-|----------|-------------|-----------|-------------|----------|
-| SymCoT   | 3.2s        | 0.92      | 1.8         | Engineering |
-| NoCoT    | 1.8s        | 0.76      | 2.3         | Executive |
-| CoT      | 2.5s        | 0.81      | 2.1         | Baseline  |
-
-*Benchmarked on GPT-4 with 80 BACoT scenarios*
+| Task |  Model |
+|------|--------|
+| Load BACoT dataset (80 samples) | Pickle binary |
+| Compute Flesch metrics | Statistical |
+| Compute BERT-Score | GPU |
+| NLI Factuality eval | MiniCheck-DeBERTa |
+| Reasoning evaluation | Azure OpenAI |
+| **Total full evaluation ** | CPU/GPU mixed |
 
 ---
 
@@ -409,72 +318,14 @@ Typical performance on Apple Silicon (M1/M2):
 
 We welcome contributions! Areas for enhancement:
 
-- [ ] LangGraph integration for complex agent orchestration
-- [ ] Multi-modal reasoning (images + text)
-- [ ] Real-time result streaming
-- [ ]  Additional evaluation datasets
-- [ ] Streamlit dashboard for result visualization
-- [ ] Support for fine-tuned models
-
----
-
-## Citation
-
-If you use this framework in your research, please cite:
-
-```bibtex
-@software{llm_business_insight_lab,
-  title={LLM Business Insight Lab: High-Reliability BI Framework for KPI Analysis},
-  author={Malvin, Your Name},
-  year={2025},
-  url={https://github.com/yourusername/llm-business-insight-lab}
-}
-```
-
-And reference the underlying thesis:
-
-```bibtex
-@mastersthesis{your_thesis,
-  title={Prompting Strategies for KPI-Driven Business Insights: A Comparative Study},
-  author={Your Name},
-  school={Technical University of Munich},
-  year={2024}
-}
-```
-
----
-
-## Troubleshooting
-
-### Issue: `ModuleNotFoundError: No module named 'pydantic_ai'`
-
-**Solution**: Install with full dependencies:
-```bash
-pip install -e ".[dev]" --upgrade
-```
-
-### Issue: Wasserstein distance too high (> 10)
-
-**Possible causes**:
-- Embeddings not normalized
-- Text preprocessing issues
-- PCA dimensionality reduction too aggressive
-
-**Debug**:
-```python
-from src.metrics import WassersteinAnalyzer
-
-analyzer = WassersteinAnalyzer()
-result = analyzer._compute_wasserstein(llm_emb, expert_emb)
-print(f"Cost matrix range: {result.cost_matrix.min():.3f} - {result.cost_matrix.max():.3f}")
-```
-
-### Issue: Experiments timeout
-
-**Solution**: Reduce `n_samples` or increase `timeout_seconds`:
-```bash
-python runner.py --n_samples 10 --timeout_seconds 60
-```
+- [ ] Additional evaluation metrics 
+- [ ] Multi-language support for NLI evaluation
+- [ ] Streaming evaluation pipeline for real-time processing
+- [ ] Dashboard/visualization tool for result analysis
+- [ ] Benchmark against other factuality models (QuestionAnswering NLI, FactKG)
+- [ ] Support for fine-tuned domain-specific evaluators
+- [ ] Integration with vector databases for embedding analysis
+- [ ] Parallel batch processing improvements
 
 ---
 
@@ -487,18 +338,5 @@ MIT License - see [LICENSE](LICENSE) for details.
 ## Contact & Support
 
 - **Questions**: Open an issue on GitHub
-- **Thesis Collaboration**: Contact author at malvin@tum.de
-- **Production Deployment**: See [DEPLOYMENT.md](docs/DEPLOYMENT.md)
-
+- **Thesis Collaboration**: Contact author at `malvin.sugiri@gmail.com`.
 ---
-
-## Acknowledgments
-
-- **TU Munich** for institutional support
-- **OpenAI** and **Anthropic** for LLM APIs
-- **Python Optimal Transport (POT)** library developers
-- **HuggingFace** community for embeddings and models
-
----
-
-**Last Updated**: April 2025 | **Framework Version**: 0.1.0
