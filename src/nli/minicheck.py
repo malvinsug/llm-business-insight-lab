@@ -22,7 +22,8 @@ class NLIMiniCheckEvaluator:
     TH_ALIGN_LIST = [0.10,0.20,0.25,0.30,0.35,0.40,0.45,0.50]
 
     @staticmethod
-    def label_claim_minicheck(claim: str,
+    def label_claim_minicheck(nli_model: BespokeLabs | MiniCheck,
+                        claim: str,
                         document_pool: list[str],
                         k: int = 5,
                         th_align_list: list[float] = TH_ALIGN_LIST
@@ -35,9 +36,9 @@ class NLIMiniCheckEvaluator:
         else:
             premises = document_pool[:k]
 
-        if isinstance(NLIMiniCheckEvaluator.NLI_MODEL, BespokeLabs):
+        if isinstance(nli_model, BespokeLabs):
             for prem in premises:
-                resp = NLIMiniCheckEvaluator.NLI_MODEL.minicheck.factcheck.create(
+                resp = nli_model.minicheck.factcheck.create(
                     claim=claim,
                     context=prem
                 )
@@ -46,9 +47,9 @@ class NLIMiniCheckEvaluator:
                 if nli_score_probability > best_p:
                     best_p, best_evid = nli_score_probability, prem
         
-        elif isinstance(NLIMiniCheckEvaluator.NLI_MODEL, MiniCheck):
+        elif isinstance(nli_model, MiniCheck):
             for prem in premises:
-                nli_score_probability = NLIMiniCheckEvaluator.NLI_MODEL.score(docs = [prem], claims=[claim])[1][0] 
+                nli_score_probability = nli_model.score(docs = [prem], claims=[claim])[1][0] 
 
 
                 if nli_score_probability > best_p:
@@ -74,6 +75,7 @@ class NLIMiniCheckEvaluator:
 
     @staticmethod
     def evaluate_answer_minicheck(
+        nli_model: BespokeLabs | MiniCheck,
         claims_to_check: list[str], 
         context_document:str, 
         k: int, 
@@ -103,7 +105,7 @@ class NLIMiniCheckEvaluator:
             except:
                 print(claims_to_check)
             try:
-                best_label_list, best_prob_list, best_evidence_list = NLIMiniCheckEvaluator.label_claim_minicheck(c, [context_document], k=k)
+                best_label_list, best_prob_list, best_evidence_list = NLIMiniCheckEvaluator.label_claim_minicheck(nli_model, c, [context_document], k=k)
             except:
                 #TODO: Refine this Exception. It was only for debugging back then.
                 print(best_label_list, best_prob_list, best_evidence_list)
@@ -174,5 +176,3 @@ class NLIMiniCheckEvaluator:
             return 1 - fact_check_dict[f"{prefix}_summary"]["NOT_ALIGN"] / fact_check_dict[f"{prefix}_summary"]["total"]
         except:
             return fact_check_dict[f"{prefix}_summary"]["ALIGN"] / fact_check_dict[f"{prefix}_summary"]["total"]
-
-NLIMiniCheckEvaluator.NLI_MODEL = NLIMiniCheckEvaluator.get_nli_model()
