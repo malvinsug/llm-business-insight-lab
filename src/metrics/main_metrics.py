@@ -5,6 +5,8 @@ from typing import Dict
 from src.nli.minicheck import NLIMiniCheckEvaluator
 from src.reasoning.evaluator import ReasoningEvaluator
 
+from typing import Iterable
+
 class MainMetrics:
     """
     Main Metrics based on master's thesis
@@ -43,7 +45,7 @@ class MainMetrics:
         return flesch_reading_ease(text)
     
     @staticmethod
-    def evaluate_bert_score(candidate:str, reference:str) -> Dict[str,float]:
+    def evaluate_bert_score(candidate:Iterable[str], reference:Iterable[str]) -> Dict[str,Iterable]:
         """
         Calculate the precision, recall and F1-Score of BERT score to understand the relevance of candidate towards the reference.
 
@@ -51,7 +53,7 @@ class MainMetrics:
             candidate(str): 
             reference(str)
         """
-        P,R, F1 = BERTScore([candidate],[reference], lang='en')
+        P,R, F1 = BERTScore(candidate.to_list(),reference.to_list(), lang='en')
 
         return {
             "bert_precision": P,
@@ -71,7 +73,7 @@ class MainMetrics:
         Returns:
             float: The precision score of the factuality of AI-generated business insight text.
         """
-        
+        NLIMiniCheckEvaluator.NLI_MODEL = NLIMiniCheckEvaluator.get_nli_model()
         fact_check_dict: dict = NLIMiniCheckEvaluator.evaluate_answer_minicheck(
             claims_to_check=facts_to_check,
             context_document= fact_reference,
@@ -79,7 +81,11 @@ class MainMetrics:
             recommendation_or_fact_str="facts"
         )
 
-        return NLIMiniCheckEvaluator.calculate_factuality_precision(fact_check_dict=fact_check_dict, prefix="facts_50")
+        factuality_precision = NLIMiniCheckEvaluator.calculate_factuality_precision(fact_check_dict=fact_check_dict, prefix="facts_50")
+
+        del NLIMiniCheckEvaluator.NLI_MODEL
+
+        return factuality_precision
     
     @staticmethod
     def evaluate_actionability(recommendations_to_check:list[str], recommendations_reference:str) ->float:
@@ -93,7 +99,7 @@ class MainMetrics:
         Returns:
             float: The precision score of the actionability of AI-generated business insight text.
         """
-        
+        NLIMiniCheckEvaluator.NLI_MODEL = NLIMiniCheckEvaluator.get_nli_model()
         rec_check_dict: dict = NLIMiniCheckEvaluator.evaluate_answer_minicheck(
             claims_to_check=recommendations_to_check,
             context_document= recommendations_reference,
@@ -101,7 +107,11 @@ class MainMetrics:
             recommendation_or_fact_str="recommendations"
         )
 
-        return NLIMiniCheckEvaluator.calculate_factuality_precision(fact_check_dict=rec_check_dict, prefix="recommendations_50")
+        actionability_precision = NLIMiniCheckEvaluator.calculate_factuality_precision(fact_check_dict=rec_check_dict, prefix="recommendations_50")
+
+        del NLIMiniCheckEvaluator.NLI_MODEL
+
+        return actionability_precision
     
     @staticmethod
     def evaluate_reasoning(reasoning_dict_list:list|dict) -> dict:
