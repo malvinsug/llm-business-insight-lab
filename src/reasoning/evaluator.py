@@ -3,13 +3,21 @@ import os
 import openai
 import re
 
-from src.utils.config import AZURE_DEPLOYMENT, AZURE_BASE_URL, AZURE_API_VERSION, AZURE_API_KEY, OPENAI_API_KEY, JUDGE_SYSTEM_PROMPT_FILE_DIR, JUDGE_TEMPERATURE
+from src.utils.config import (
+    AZURE_DEPLOYMENT,
+    AZURE_BASE_URL,
+    AZURE_API_VERSION,
+    AZURE_API_KEY,
+    OPENAI_API_KEY,
+    JUDGE_SYSTEM_PROMPT_FILE_DIR,
+    JUDGE_TEMPERATURE,
+)
+
 
 class ReasoningEvaluator:
     """
     A reasoning evaluator using LLM (LLM-as-a-Judge) for business insight text.
     """
-
 
     AZURE_DEPLOYMENT = AZURE_DEPLOYMENT
     AZURE_BASE_URL = AZURE_BASE_URL
@@ -22,19 +30,15 @@ class ReasoningEvaluator:
     def get_llm():
         try:
             llm: openai.AzureOpenAI = openai.AzureOpenAI(
-                azure_endpoint=ReasoningEvaluator.AZURE_BASE_URL, 
-                azure_deployment = ReasoningEvaluator.AZURE_DEPLOYMENT, 
-                api_version = ReasoningEvaluator.AZURE_API_VERSION , 
-                api_key = ReasoningEvaluator.AZURE_API_KEY
+                azure_endpoint=ReasoningEvaluator.AZURE_BASE_URL,
+                azure_deployment=ReasoningEvaluator.AZURE_DEPLOYMENT,
+                api_version=ReasoningEvaluator.AZURE_API_VERSION,
+                api_key=ReasoningEvaluator.AZURE_API_KEY,
             )
         except:
-            llm: openai.OpenAI = openai.OpenAI(
-                api_key=ReasoningEvaluator.OPENAI_API_KEY
-            )
+            llm: openai.OpenAI = openai.OpenAI(api_key=ReasoningEvaluator.OPENAI_API_KEY)
 
         return llm
-
-
 
     JUDGE_SYSTEM_PROMPT_FILE_DIR = JUDGE_SYSTEM_PROMPT_FILE_DIR
     JUDGE_TEMPERATURE = JUDGE_TEMPERATURE
@@ -43,40 +47,38 @@ class ReasoningEvaluator:
     def get_system_prompt():
         with open(ReasoningEvaluator.JUDGE_SYSTEM_PROMPT_FILE_DIR) as f:
             system_prompt = f.read()
-        
+
         return system_prompt
-    
+
     @staticmethod
-    def extract_reasoning_json_from_llm(data:str) -> dict:
-            messages = [
-                {"role": "system", "content": ReasoningEvaluator.get_system_prompt()},
-                {"role": "user", "content": data}
-            ]
-            response = ReasoningEvaluator.get_llm().chat.completions.create(
-                model=ReasoningEvaluator.AZURE_DEPLOYMENT,
-                messages=messages,
-                temperature=0
-            )
-            return response.choices[0].message.content
-    
-    def wrap_data_as_user_message(question:str, answer: str, human_observation:str) -> str:
+    def extract_reasoning_json_from_llm(data: str) -> dict:
+        messages = [
+            {"role": "system", "content": ReasoningEvaluator.get_system_prompt()},
+            {"role": "user", "content": data},
+        ]
+        response = ReasoningEvaluator.get_llm().chat.completions.create(
+            model=ReasoningEvaluator.AZURE_DEPLOYMENT, messages=messages, temperature=0
+        )
+        return response.choices[0].message.content
+
+    def wrap_data_as_user_message(question: str, answer: str, human_observation: str) -> str:
         return f"<LLM generated text>\n{answer}\n<\LLM generated text>\n\n<Human Observations and Hypotheses>{human_observation}\n<\Human Observations and Hypotheses>"
 
-
     @staticmethod
-    def evaluate_reasoning(question:str,answer:str, human_observation:str):
-        user_message = ReasoningEvaluator.wrap_data_as_user_message(question,answer, human_observation)
+    def evaluate_reasoning(question: str, answer: str, human_observation: str):
+        user_message = ReasoningEvaluator.wrap_data_as_user_message(
+            question, answer, human_observation
+        )
         return ReasoningEvaluator.extract_reasoning_json_from_llm(user_message)
-    
 
     @staticmethod
-    def extract_json_for_azure_response(reasoning_text:str) -> dict:
+    def extract_json_for_azure_response(reasoning_text: str) -> dict:
         """
         Convert the reasoning judgement from LLM into valid dictionary.
 
         Args:
             reasoning_text (str): judgment made by LLM in stringified JSON.
-        
+
         Returns:
             dict: a valid dictionary of reasoning judgement from LLM.
         """
@@ -92,12 +94,12 @@ class ReasoningEvaluator:
         return None
 
     @staticmethod
-    def extract_reasoning_count(reasoning_dict_list:list|dict) -> int:
+    def extract_reasoning_count(reasoning_dict_list: list | dict) -> int:
         """
         Count how many valid reasoning within the AI-generated text are valid.
 
         Args:
-            reasoning_dict_list (list|dict): It could be a list of dictionary or a dictionary containing the reasoning judgement from LLM. 
+            reasoning_dict_list (list|dict): It could be a list of dictionary or a dictionary containing the reasoning judgement from LLM.
         Returns:
             int: total count of valid reasoning
         """
@@ -115,12 +117,12 @@ class ReasoningEvaluator:
 
         return count
 
-    def extract_total_reasoning_to_verify(reasoning_dict_list:list|dict)-> int:
+    def extract_total_reasoning_to_verify(reasoning_dict_list: list | dict) -> int:
         """
         Count how many reasoning within the AI-generated text are valid.
 
         Args:
-            reasoning_dict_list (list|dict): It could be a list of dictionary or a dictionary containing the reasoning judgement from LLM. 
+            reasoning_dict_list (list|dict): It could be a list of dictionary or a dictionary containing the reasoning judgement from LLM.
         Returns:
             int: total count of generated reasoning
         """

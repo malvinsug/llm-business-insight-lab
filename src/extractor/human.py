@@ -1,5 +1,6 @@
 import re
 
+
 class HumanAnswerExtractor:
     """
     Extract the sections within human-written business insight text.
@@ -8,7 +9,6 @@ class HumanAnswerExtractor:
     - Interpretations
     - Recommendations
     """
-    
 
     @staticmethod
     def _extract_section(human_text: str, section: str) -> str:
@@ -36,17 +36,17 @@ class HumanAnswerExtractor:
             # drop look-ahead ##
             pattern = rf"(?ms)^##\s*{section}\b\s*(.*)$"
         match = re.search(pattern, human_text, flags=re.S | re.I | re.M)
-        
+
         return match.group(1).strip() if match else ""
-    
+
     @staticmethod
-    def extract_observations(human_text:str):
+    def extract_observations(human_text: str):
         return HumanAnswerExtractor._extract_section(human_text, "observations")
-    
+
     @staticmethod
-    def extract_interpretations(human_text:str):
+    def extract_interpretations(human_text: str):
         return HumanAnswerExtractor._extract_section(human_text, "interpretations")
-    
+
     @staticmethod
-    def extract_recommendations(human_text:str):
+    def extract_recommendations(human_text: str):
         return HumanAnswerExtractor._extract_section(human_text, "recommendations")
