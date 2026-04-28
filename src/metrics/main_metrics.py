@@ -73,17 +73,20 @@ class MainMetrics:
         Returns:
             float: The precision score of the factuality of AI-generated business insight text.
         """
-        NLIMiniCheckEvaluator.NLI_MODEL = NLIMiniCheckEvaluator.get_nli_model()
+        from transformers.utils.logging import disable_progress_bar
+        disable_progress_bar()
+
+        nli_model = NLIMiniCheckEvaluator.get_nli_model()
         fact_check_dict: dict = NLIMiniCheckEvaluator.evaluate_answer_minicheck(
+            nli_model = nli_model,
             claims_to_check=facts_to_check,
             context_document= fact_reference,
             k=5, 
             recommendation_or_fact_str="facts"
         )
+        del nli_model
 
         factuality_precision = NLIMiniCheckEvaluator.calculate_factuality_precision(fact_check_dict=fact_check_dict, prefix="facts_50")
-
-        del NLIMiniCheckEvaluator.NLI_MODEL
 
         return factuality_precision
     
@@ -99,18 +102,20 @@ class MainMetrics:
         Returns:
             float: The precision score of the actionability of AI-generated business insight text.
         """
-        NLIMiniCheckEvaluator.NLI_MODEL = NLIMiniCheckEvaluator.get_nli_model()
+        from transformers.utils.logging import disable_progress_bar
+        disable_progress_bar()
+        
+        nli_model = NLIMiniCheckEvaluator.get_nli_model()
         rec_check_dict: dict = NLIMiniCheckEvaluator.evaluate_answer_minicheck(
+            nli_model=nli_model,
             claims_to_check=recommendations_to_check,
             context_document= recommendations_reference,
             k=5, 
             recommendation_or_fact_str="recommendations"
         )
+        del nli_model
 
         actionability_precision = NLIMiniCheckEvaluator.calculate_factuality_precision(fact_check_dict=rec_check_dict, prefix="recommendations_50")
-
-        del NLIMiniCheckEvaluator.NLI_MODEL
-
         return actionability_precision
     
     @staticmethod
